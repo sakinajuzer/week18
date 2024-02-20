@@ -4,12 +4,12 @@
     "description" : "my online pet store", 
     "icons" : [
         {
-            "src" : "images/icon-store-512.png",
+            "src" : "../week18_pwa/images/icon-store-512.png",
             "sizes" : "512x512", 
             "type" : "image/png"
         }
     ],
-    "start_url" : "index.html", 
+    "start_url" : "../week18_pwa/index.html", 
     "display" : "fullscreen", 
     "background_color" : "#B12A34"
 
