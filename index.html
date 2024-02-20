@@ -1,0 +1,200 @@
+<html>
+
+<head>
+    <title>Vue.js Pet Depot</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.js"></script>
+    <script src="./products.js"></script>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
+        integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous" />
+    <link href="../week18_pwa/css.css" rel="stylesheet" type="text/css">
+    <link href="../week18_pwa/webstore.webmanifest" rel="manifest">
+</head>
+<script>
+    if("ServiceWorker in navigator"){
+        navigator.serviceWorker.register('serviceWorker.js');
+    };
+</script>
+
+<body>
+    <div id="app">
+        <header>
+            <h1 v-text="sitename"></h1>
+            <button v-on:click="showCheckout">
+                {{cartItemCount}}
+                <span class="fas fa-cart-arrow-down"></span> Checkout
+            </button>
+        </header>
+        <main>
+            <div v-if="showProduct">
+                <div class ="product" v-for="product in sortedProducts">
+                    <figure>
+                        <img v-bind:src="product.image" height="100px" width="100px">
+                    </figure>
+                    <h2 v-text="product.title"></h2>
+                    <p v-html="product.description"></p>
+                    <p>Price: {{product.price}} </p>
+                    <p>Available Inventory: {{product.availableInventory - cartCount(product.id)}}</p>
+                    <!-- <button v-on:click = "addToCart" v-show="canAddToCart">
+                        Add to cart
+                    </button> -->
+                    <!-- This button will be displayed when canAddToCart is true -->
+                    <button v-on:click="addToCart(product)" v-if="canAddToCart(product)">
+                        Add to Cart
+                    </button>
+                    <!-- This button will be displayed if it is false -->
+                    <button disabled="disabled" v-else>
+                        Add to Cart
+                    </button>
+                    <span v-if="product.availableInventory === cartCount(product.id)">All Out!</span>
+                    <span v-else-if="product.availableInventory - cartCount(product.id) < 5">
+                        Only {{product.availableInventory - cartCount(product.id)}} left!
+                    </span>
+                    <span v-else>Buy Now!!</span>
+                    <div>
+                        <span v-for="n in product.rating">★</span>
+                        <span v-for="n in 5-product.rating">☆</span>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <h2>Checkout</h2>
+                <p>
+                    <strong>First Name: </strong>
+                    <!-- this input field is bound to firstname in the order object -->
+                    <input v-model.trim="order.firstName" />
+                </p>
+                <p>
+                    <strong>Last Name: </strong>
+                    <!-- this input field is bound to lastname in the order object -->
+                    <input v-model.trim="order.lastName">
+                </p>
+                <p><strong>Address: </strong> <input v-model.trim="order.address"></p>
+                <p><strong>City: </strong> <input v-model.trim="order.city"></p>
+                <p>
+                    <strong>State: </strong>
+                    <select v-model=order.state>
+                        <option disabled value="">State</option>
+                        <option v-for="(state, key) in states" v-bind:value="state"> {{key}} </option>
+                        <!-- <option v-bind:value = "states.AL">AL</option>
+                        <option v-bind:value = "states.AR">AR</option>
+                        <option v-bind:value = "states.CA">CA</option>
+                        <option v-bind:value = "states.NW">NV</option> -->
+                    </select>
+                </p>
+                <p><strong>Zip/Postal Code: </strong> <input v-model.number="order.zip" type="number"></p>
+                <p><input type="checkbox" id="gift" value="true" v-model="order.gift" v-bind:true-value="order.sendGift"
+                        v-bind:false-value="order.dontSendGift">
+                    <label for="gift">Ship As Gift</label>
+                </p>
+                <p><input type="radio" id="home" value="Home" v-model="order.method">
+                    <label for="home">Home</label>
+                    <input type="radio" id="business" value="Business" v-model="order.method">
+                    <label for="business">Business</label>
+                </p>
+                <button v-on:click="submitForm">Place Order</button>
+
+                <h2>Order Information</h2>
+                <p>First Name: {{order.firstName}}</p>
+                <p>Last Name: {{order.lastName}}</p>
+                <p>Address: {{order.address}}</p>
+                <p>City: {{order.city}}</p>
+                <p>State: {{order.state}}</p>
+                <p>Zip/Postal Code: {{order.zip}}</p>
+                <p>Gift?: {{order.gift}}</p>
+                <p>Method: {{order.method}}</p>
+            </div>
+        </main>
+    </div>
+    <script type="text/javascript">
+        // new Vue is the constructor
+        // ({ option object goes here })
+        // option objects are all the pre defined keys like el, data and methods and it is written as JSON
+        let webstore = new Vue({
+            // specifies the Document Object Model (DOM)
+            el: "#app",
+            data: {
+                showProduct: true,
+                sitename: "Vue.js Pet Depot",
+                order: {
+                    firstName: "",
+                    lastName: "",
+                    address: "",
+                    city: "",
+                    zip: "",
+                    state: "",
+                    method: "Home",
+                    sendGift: "Send as a gift",
+                    dontSendGift: "Do not send as a gift"
+                },
+                products: products,
+                // product: {
+                //     id: 1001,
+                //     title: "Cat Food, 25 lb bag",
+                //     description: "A 25 pounds bag of <em>irresistible</em>," + " organic goodness for your cat,",
+                //     price: 2000,
+                //     image: "cat-food-aluminum-can-with-yellow-label_1308-8258.jpeg",
+                //     availableInventory: 5,
+                //     rating: 3
+                // },
+                cart: [],
+                states: {
+                    AL: "Alabama",
+                    AR: "Arizona",
+                    CA: "California",
+                    NV: "Nevada"
+                }
+            },
+            methods: {
+                addToCart: function (product) {
+                    this.cart.push(product.id);
+                    // this.product.availableInventory--;
+                },
+                cartCount(id) {
+                    let count = 0;
+                    for (let i = 0; i < this.cart.length; i++) {
+                        if (this.cart[i] === id) {
+                            count++;
+                        }
+                    }
+                    return count;
+                },
+                canAddToCart: function (product) {
+                    return product.availableInventory > this.cartCount(product.id);
+                },
+                showCheckout: function () {
+                    // ? is a ternery operator
+                    // ? helps shifting between pages works like the toggle button when true it will be product page and 
+                    // when false it will be checkout page
+                    this.showProduct = this.showProduct ? false : true;
+                },
+                submitForm: function () {
+                    alert("Order Submitted!!!!")
+                }
+            },
+            computed: {
+                cartItemCount: function () {
+                    return this.cart.length || " ";
+                },
+                // canAddToCart: function (product) {
+                //     return product.availableInventory > this.cartItemCount(product.id);
+                // },
+                inventoryCount: function () {
+                    return this.product.availableInventory - this.cartItemCount;
+                },
+                sortedProducts() {
+                    let productsArray = this.products.slice(0);
+                    function compare(a, b) {
+                        if (a.price > b.price)
+                            return 1;
+                        if (a.price < b.price)
+                            return -1;
+                        return 0;
+                    }
+                    return productsArray.sort(compare);
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
