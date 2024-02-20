@@ -1,8 +1,8 @@
 var cacheName = 'petstore-v1';
 var cacheFiles = [
     'index.html',
-    'product.js',
-    'petstore.webmanifest',
+    'products.js',
+    'webstore.webmanifest',
     'images/catfood.jpg',
     'images/icon-store-512.png'
 ];
@@ -16,3 +16,12 @@ self.addEventListener('install', (e) => {
         })
     )
 })
+
+self.addEventListener('fetch', function(e){
+    e.respondWith(
+        caches.match(e.request).then(function(r){
+            console.log('[Service Worker] fetching resource: '+ e.request.url);
+            return r;
+        })
+    );
+});
